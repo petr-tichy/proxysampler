@@ -8,6 +8,7 @@ import (
 	"net/http/httptrace"
 	"net/url"
 	"os"
+	"sync"
 	"time"
 
 	"github.com/cheggaaa/pb"
@@ -85,9 +86,13 @@ func testProxies(proxies []string) {
 	proxiesCh := make(chan string, maxThreads)
 	resultsCh := make(chan *result)
 
+	var wg sync.WaitGroup
+
 	for w := 1; w <= maxThreads; w++ {
 		// Run getHTTP calls a concurrently
+		wg.Add(1)
 		go func(proxies chan string, results chan *result) {
+			defer wg.Done()
 			for proxy := range proxies {
 				time.Sleep(time.Duration(delay) * time.Millisecond)
 				res, err := getHTTP(testURL, proxy)
@@ -119,6 +124,8 @@ func testProxies(proxies []string) {
 	}
 
 	close(proxiesCh)
+
+	wg.Wait()
 
 	// Stop the progress bar
 	if output == "plaintext" {
