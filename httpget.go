@@ -56,6 +56,8 @@ func getHTTP(fetchURL string, proxy string) (res *result, err error) {
 		IdleConnTimeout:       5 * time.Second,
 		ResponseHeaderTimeout: 5 * time.Second,
 		ExpectContinueTimeout: 5 * time.Second,
+		DisableKeepAlives:     true,
+		MaxConnsPerHost:       0,
 	}
 
 	if r, err = tr.RoundTrip(req); err != nil {
@@ -72,6 +74,7 @@ func getHTTP(fetchURL string, proxy string) (res *result, err error) {
 			res.ResponseBody = string(b)
 		}
 	}
+	defer r.Body.Close()
 
 	res.StatusCode = r.StatusCode
 	return
