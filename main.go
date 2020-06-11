@@ -31,7 +31,7 @@ type report struct {
 }
 
 var results []*result
-var activeThreads int32
+var activeThreads = 0
 var remainingThreads = 0
 var bar *pb.ProgressBar
 var output = "plaintext"
@@ -39,7 +39,7 @@ var proxyFile = ""
 var singleProxy = ""
 var testURL = "https://example.com"
 var delay = 50
-var maxThreads int32 = 10
+var maxThreads = 10
 var includeResponseBody = false
 
 // init reads command line arguments and sets config variables
@@ -76,7 +76,8 @@ func init() {
 			testURL = os.Args[k+1]
 			break
 		case "--max-threads":
-			n, err := strconv.Atoi(os.Args[k+1])
+			var err error
+			maxThreads, err = strconv.Atoi(os.Args[k+1])
 			if err != nil {
 				maxThreads = 10
 				break
@@ -84,7 +85,6 @@ func init() {
 			if maxThreads < 1 {
 				panic("invalid value for --max-threads")
 			}
-			maxThreads = int32(n)
 			break
 		case "--delay":
 			var err error
