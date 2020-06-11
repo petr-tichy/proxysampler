@@ -54,7 +54,6 @@ func getHTTP(fetchURL string, proxy string) (res *result, err error) {
 		Proxy:                 http.ProxyURL(p),
 		TLSClientConfig:       &tls.Config{},
 		TLSHandshakeTimeout:   5 * time.Second,
-		IdleConnTimeout:       5 * time.Second,
 		ResponseHeaderTimeout: 5 * time.Second,
 		ExpectContinueTimeout: 5 * time.Second,
 		DisableKeepAlives:     true,
@@ -85,6 +84,7 @@ func getHTTP(fetchURL string, proxy string) (res *result, err error) {
 func testProxies(proxies []string) {
 	proxiesCh := make(chan string, maxThreads)
 	resultsCh := make(chan *result)
+	done := make(chan struct{})
 
 	var wg sync.WaitGroup
 
@@ -125,6 +125,7 @@ func testProxies(proxies []string) {
 
 		// Display the report
 		displayReport(results)
+		done <- struct{}{}
 	}(resultsCh)
 
 	for _, proxy := range proxies {
@@ -137,6 +138,7 @@ func testProxies(proxies []string) {
 
 	close(resultsCh)
 
+	<- done
 }
 
 // testProxiesFromFile reads a file for proxy information and passes them to testProxies
