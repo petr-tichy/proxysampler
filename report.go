@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"sync/atomic"
 
 	"gopkg.in/yaml.v1"
 )
@@ -13,7 +14,7 @@ func addResult(res *result, err error) {
 	// Decrement thread count
 	defer func() {
 		remainingThreads--
-		activeThreads++
+		atomic.AddInt32(&activeThreads, 1)
 	}()
 
 	if res == nil {

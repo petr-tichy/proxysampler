@@ -8,6 +8,7 @@ import (
 	"net/http/httptrace"
 	"net/url"
 	"os"
+	"sync/atomic"
 	"time"
 
 	"github.com/cheggaaa/pb"
@@ -83,7 +84,7 @@ func getHTTP(fetchURL string, proxy string) (res *result, err error) {
 // testProxies takes a slice of strings with proxy information, calls getHTTP to test them, and runs the report when finished
 func testProxies(proxies []string) {
 	for i, proxy := range proxies {
-		activeThreads--
+		atomic.AddInt32(&activeThreads, -1)
 
 		// Sleep for specified delay between reqs
 		if i > 0 {
@@ -93,7 +94,7 @@ func testProxies(proxies []string) {
 		// Run getHTTP calls a concurrently
 		go func() {
 			// Wait if all threads are occupied
-			for activeThreads < 0 {
+			for atomic.LoadInt32(&activeThreads) < 0 {
 				time.Sleep(time.Duration(delay) * time.Millisecond)
 			}
 			res, err := getHTTP(testURL, proxy)
@@ -102,7 +103,7 @@ func testProxies(proxies []string) {
 	}
 
 	// Wait for all tests to complete
-	for activeThreads < maxThreads {
+	for atomic.LoadInt32(&activeThreads) < maxThreads {
 		time.Sleep(100 * time.Millisecond)
 	}
 
