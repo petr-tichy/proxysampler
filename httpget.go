@@ -117,6 +117,14 @@ func testProxies(proxies []string) {
 				bar.Increment()
 			}
 		}
+
+		// Stop the progress bar
+		if output == "plaintext" {
+			bar.Finish()
+		}
+
+		// Display the report
+		displayReport(results)
 	}(resultsCh)
 
 	for _, proxy := range proxies {
@@ -127,13 +135,8 @@ func testProxies(proxies []string) {
 
 	wg.Wait()
 
-	// Stop the progress bar
-	if output == "plaintext" {
-		bar.Finish()
-	}
+	close(resultsCh)
 
-	// Display the report
-	displayReport(results)
 }
 
 // testProxiesFromFile reads a file for proxy information and passes them to testProxies
